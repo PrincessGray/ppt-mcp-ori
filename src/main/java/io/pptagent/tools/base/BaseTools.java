@@ -2,10 +2,12 @@ package io.pptagent.tools.base;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.File;
 
 import com.aspose.slides.Presentation;
 import com.aspose.slides.SaveFormat;
 import io.pptagent.tools.PresentationManager;
+import io.pptagent.App;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -48,6 +50,35 @@ public class BaseTools {
         } else {
             return SaveFormat.Pptx; // PPTX为默认格式
         }
+    }
+    
+    /**
+     * 获取完整的文件路径
+     * 
+     * @param filePath 文件路径
+     * @return 完整的文件路径
+     */
+    private static String getFullPath(String filePath) {
+        if (filePath == null || filePath.trim().isEmpty()) {
+            throw new IllegalArgumentException("文件路径不能为空");
+        }
+        
+        File file = new File(filePath);
+        if (file.isAbsolute()) {
+            return filePath; // 如果是绝对路径，直接返回
+        }
+        
+        // 使用工作目录
+        String workspace = App.getWorkspace();
+        File fullPath = new File(workspace, filePath);
+        
+        // 确保目标目录存在
+        File parentDir = fullPath.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+        
+        return fullPath.getAbsolutePath();
     }
     
     /**
@@ -99,9 +130,10 @@ public class BaseTools {
             }
             
             try {
+                String fullPath = getFullPath(filePath);
                 int saveFormat = getFormatValue(format);
-                pres.save(filePath, saveFormat);
-                return new SaveResult(true, "保存成功", filePath);
+                pres.save(fullPath, saveFormat);
+                return new SaveResult(true, "保存成功", fullPath);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "保存演示文稿失败", e);
                 return new SaveResult(false, "保存失败: " + e.getMessage(), filePath);

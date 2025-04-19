@@ -6,7 +6,9 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
+import io.pptagent.mcp.AnimationToolsRegistrar;
 import io.pptagent.mcp.BackgroundToolsRegistrar;
+import io.pptagent.mcp.ChartToolsRegistrar;
 import io.pptagent.mcp.PresentationToolsRegistrar;
 import io.pptagent.mcp.ShapeToolsRegistrar;
 import io.pptagent.mcp.SlideToolsRegistrar;
@@ -41,8 +43,18 @@ import reactor.core.publisher.Mono;
 public class App {
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static final String LOG_FILE_PATH = "pptagent.log";
+    private static String workspace; // 添加工作目录变量
     
     public static void main(String[] args) {
+        // 获取WORKSPACE环境变量
+        workspace = System.getenv("WORKSPACE");
+        if (workspace == null || workspace.trim().isEmpty()) {
+            workspace = System.getProperty("user.dir"); // 如果没有设置WORKSPACE，使用当前目录
+            log.info("未设置WORKSPACE环境变量，使用当前目录: {}", workspace);
+        } else {
+            log.info("使用WORKSPACE环境变量: {}", workspace);
+        }
+        
         // 解析命令行参数
         if (args.length > 0 && args[0].equalsIgnoreCase("demo")) {
             // 重定向标准输出和标准错误到文件
@@ -52,11 +64,10 @@ public class App {
             System.setProperty("org.slf4j.simpleLogger.logFile", LOG_FILE_PATH);
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "INFO");
             
-            // 启动MCP服务器模式
-
+            // 执行演示模式
             runDemo();
         } else {
-            // 执行演示模式
+            // 启动MCP服务器模式
             startMcpServer();
         }
     }
@@ -202,11 +213,17 @@ public class App {
         // 添加形状工具
         allTools.addAll(ShapeToolsRegistrar.createToolSpecifications());
         
-        // 添加文本工具
+        // 添加文本工具 
         allTools.addAll(TextToolsRegistrar.createToolSpecifications());
-        
+
         // 添加SVG工具
         allTools.addAll(SvgToolsRegistrar.createToolSpecifications());
+        
+        // 添加图表工具
+        allTools.addAll(ChartToolsRegistrar.createToolSpecifications());
+
+        // 添加动画工具
+        allTools.addAll(AnimationToolsRegistrar.createToolSpecifications());
         
         // 逐个注册工具
         return Flux.fromIterable(allTools)
@@ -345,7 +362,7 @@ public class App {
                 log.info("添加SVG图像，索引：{}", svgIndex);
                 
                 // 保存演示文稿
-                String outputPath = System.getProperty("user.dir") + "/PPTAgent_Demo.pptx";
+                String outputPath = workspace + "/PPTAgent_Demo.pptx";
                 boolean saved = BaseTools.savePresentation(outputPath, "PPTX");
                 log.info("保存演示文稿到 {}: {}", outputPath, saved ? "成功" : "失败");
                 
@@ -354,5 +371,10 @@ public class App {
                 PresentationManager.getInstance().dispose();
             }
         }
+    }
+    
+    // 添加获取工作目录的方法
+    public static String getWorkspace() {
+        return workspace;
     }
 }
