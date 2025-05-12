@@ -41,7 +41,7 @@ public class SlideToolsRegistrar {
                 "layoutType": {
                   "type": "string",
                   "enum": ["BLANK", "TITLE", "TITLEBODY", "TITLEONLY"],
-                  "description": "幻灯片布局类型：BLANK(空白)、TITLE(标题)、TITLEBODY(标题和内容)、TITLEONLY(仅标题)"
+                  "description": "幻灯片布局类型：BLANK(空白)"
                 }
               },
               "required": ["layoutType"]

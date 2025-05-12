@@ -8,17 +8,14 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import com.aspose.slides.FillType;
 import com.aspose.slides.IPPImage;
 import com.aspose.slides.IPictureFrame;
 import com.aspose.slides.ISlide;
-import com.aspose.slides.PictureFillMode;
 import com.aspose.slides.Presentation;
 import com.aspose.slides.ShapeType;
 import io.pptagent.App;
 import io.pptagent.tools.PresentationManager;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

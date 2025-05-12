@@ -16,6 +16,7 @@ import io.pptagent.tools.PresentationManager;
  * 使用Java 17特性重写
  */
 public final class SvgTools {
+    
     private static final Logger LOGGER = Logger.getLogger(SvgTools.class.getName());
     
     private SvgTools() {

@@ -95,7 +95,7 @@ public final class TextTools {
                 
                 // 创建自动形状作为文本框
                 IAutoShape textBox = slide.getShapes().addAutoShape(
-                    ShapeType.Rectangle, 
+                    ShapeType.RoundCornerRectangle, 
                     params.getX(), 
                     params.getY(), 
                     params.getWidth(), 
@@ -163,78 +163,87 @@ public final class TextTools {
                 return new SetFormattedTextResult(false, "没有活动的演示文稿");
             }
             
-            try {
-                ISlide slide = pres.getSlides().get_Item(slideIndex);
-                
-                if (shapeIndex < 0 || shapeIndex >= slide.getShapes().size()) {
-                    return new SetFormattedTextResult(false, "无效的形状索引");
-                }
-                
-                if (!(slide.getShapes().get_Item(shapeIndex) instanceof IAutoShape shape)) {
-                    return new SetFormattedTextResult(false, "指定的形状不是自动形状");
-                }
+            // 检查formattedText是否为null
+            if (formattedText == null) {
+                return new SetFormattedTextResult(false, "格式化文本数组不能为null");
+            }
+            
+            ISlide slide = pres.getSlides().get_Item(slideIndex);
+            
+            if (shapeIndex < 0 || shapeIndex >= slide.getShapes().size()) {
+                return new SetFormattedTextResult(false, "无效的形状索引");
+            }
+            
+            if (!(slide.getShapes().get_Item(shapeIndex) instanceof IAutoShape shape)) {
+                return new SetFormattedTextResult(false, "指定的形状不是自动形状");
+            }
 
-                // 确保形状有文本框架
-                if (!shape.isTextBox()) {
-                    shape.addTextFrame("");
+            // 确保形状有文本框架
+            if (!shape.isTextBox()) {
+                shape.addTextFrame("");
+            }
+            
+            ITextFrame textFrame = shape.getTextFrame();
+            
+            // 完全清除现有段落
+            textFrame.getParagraphs().clear();
+            
+            // 创建新段落
+            Paragraph para = new Paragraph();
+            
+            // 为每个格式化文本部分创建Portion并设置格式
+            for (Map<String, Object> textPart : formattedText) {
+                if (textPart == null || !textPart.containsKey("text")) {
+                    continue; // 跳过无效的文本部分
                 }
                 
-                ITextFrame textFrame = shape.getTextFrame();
+                Portion portion = new Portion();
                 
-                // 完全清除现有段落
-                textFrame.getParagraphs().clear();
+                // 设置文本内容
+                String text = (String) textPart.get("text");
+                portion.setText(text);
                 
-                // 创建新段落
-                Paragraph para = new Paragraph();
+                // 应用字体设置
+                if (textPart.containsKey("fontName")) {
+                    portion.getPortionFormat().setLatinFont(new FontData((String) textPart.get("fontName")));
+                }
                 
-                // 为每个格式化文本部分创建Portion并设置格式
-                for (Map<String, Object> textPart : formattedText) {
-                    Portion portion = new Portion();
-                    
-                    // 设置文本内容
-                    String text = (String) textPart.get("text");
-                    portion.setText(text);
-                    
-                    // 应用字体设置
-                    if (textPart.containsKey("fontName")) {
-                        portion.getPortionFormat().setLatinFont(new FontData((String) textPart.get("fontName")));
-                    }
-                    
-                    // 应用字体大小
-                    if (textPart.containsKey("fontSize")) {
-                        Number fontSize = (Number) textPart.get("fontSize");
-                        portion.getPortionFormat().setFontHeight((float)fontSize.doubleValue());
-                    }
-                    
-                    // 应用粗体
-                    if (textPart.containsKey("bold") && (boolean) textPart.get("bold")) {
-                        portion.getPortionFormat().setFontBold(NullableBool.True);
-                    }
-                    
-                    // 应用斜体
-                    if (textPart.containsKey("italic") && (boolean) textPart.get("italic")) {
-                        portion.getPortionFormat().setFontItalic(NullableBool.True);
-                    }
-                    
-                    // 应用颜色
-                    if (textPart.containsKey("color")) {
+                // 应用字体大小
+                if (textPart.containsKey("fontSize")) {
+                    Number fontSize = (Number) textPart.get("fontSize");
+                    portion.getPortionFormat().setFontHeight((float)fontSize.doubleValue());
+                }
+                
+                // 应用粗体
+                if (textPart.containsKey("bold") && (boolean) textPart.get("bold")) {
+                    portion.getPortionFormat().setFontBold(NullableBool.True);
+                }
+                
+                // 应用斜体
+                if (textPart.containsKey("italic") && (boolean) textPart.get("italic")) {
+                    portion.getPortionFormat().setFontItalic(NullableBool.True);
+                }
+                
+                // 应用颜色
+                if (textPart.containsKey("color")) {
+                    try {
                         portion.getPortionFormat().getFillFormat().setFillType(FillType.Solid);
                         Color color = Color.decode((String) textPart.get("color"));
                         portion.getPortionFormat().getFillFormat().getSolidFillColor().setColor(color);
+                    } catch (NumberFormatException e) {
+                        LOGGER.log(Level.WARNING, "无效的颜色格式: " + textPart.get("color"), e);
+                        // 继续处理，但不应用无效的颜色
                     }
-                    
-                    // 将Portion添加到段落
-                    para.getPortions().add(portion);
                 }
                 
-                // 将段落添加到文本框
-                textFrame.getParagraphs().add(para);
-                
-                return new SetFormattedTextResult(true, "格式化文本设置成功");
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "设置格式化文本失败", e);
-                return new SetFormattedTextResult(false, "设置格式化文本失败: " + e.getMessage());
+                // 将Portion添加到段落
+                para.getPortions().add(portion);
             }
+            
+            // 将段落添加到文本框
+            textFrame.getParagraphs().add(para);
+            
+            return new SetFormattedTextResult(true, "格式化文本设置成功");
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "设置格式化文本失败", e);
             return new SetFormattedTextResult(false, "设置格式化文本失败: " + e.getMessage());

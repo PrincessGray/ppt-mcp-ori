@@ -57,7 +57,7 @@ public class PictureToolsRegistrar {
                 "height": {
                   "type": "number",
                   "minimum": 0,
-                  "description": "图片框高度，宽高比必须和原图片宽高比例一致"
+                  "description": "图片框高度，宽高比“必须”和原图片宽高比例一致"
                 },
                 "slideIndex": {
                   "type": "integer",

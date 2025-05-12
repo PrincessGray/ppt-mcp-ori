@@ -53,7 +53,7 @@ public final class PresentationManager {
             presentation = new Presentation();
             
             // 设置演示文稿尺寸为16:9
-            presentation.getSlideSize().setSize(SlideSizeType.OnScreen16x9, SlideSizeScaleType.EnsureFit);
+            presentation.getSlideSize().setSize(1600, 900, SlideSizeScaleType.EnsureFit);
             
             currentSlideIndex.set(0);
             return true;

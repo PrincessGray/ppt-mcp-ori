@@ -1,19 +1,13 @@
 package io.pptagent;
 
+import com.aspose.slides.Picture;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.server.McpAsyncServer;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
-import io.pptagent.mcp.AnimationToolsRegistrar;
-import io.pptagent.mcp.BackgroundToolsRegistrar;
-import io.pptagent.mcp.ChartToolsRegistrar;
-import io.pptagent.mcp.PresentationToolsRegistrar;
-import io.pptagent.mcp.ShapeToolsRegistrar;
-import io.pptagent.mcp.SlideToolsRegistrar;
-import io.pptagent.mcp.SvgToolsRegistrar;
-import io.pptagent.mcp.TextToolsRegistrar;
+import io.pptagent.mcp.*;
 import io.pptagent.tools.PresentationManager;
 import io.pptagent.tools.background.BackgroundTools;
 import io.pptagent.tools.base.BaseTools;
@@ -32,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -43,6 +39,8 @@ import reactor.core.publisher.Mono;
 public class App {
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static final String LOG_FILE_PATH = "pptagent.log";
+    // 添加获取工作目录的方法
+    @Getter
     private static String workspace; // 添加工作目录变量
     
     public static void main(String[] args) {
@@ -224,6 +222,12 @@ public class App {
 
         // 添加动画工具
         allTools.addAll(AnimationToolsRegistrar.createToolSpecifications());
+
+        // 添加图片工具
+        allTools.addAll(PictureToolsRegistrar.createToolSpecifications());
+
+        // 添加信息工具
+        allTools.addAll(InfoToolsRegistrar.createToolSpecifications());
         
         // 逐个注册工具
         return Flux.fromIterable(allTools)
@@ -372,9 +376,5 @@ public class App {
             }
         }
     }
-    
-    // 添加获取工作目录的方法
-    public static String getWorkspace() {
-        return workspace;
-    }
+
 }
